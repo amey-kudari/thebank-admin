@@ -62,3 +62,11 @@ CREATE TABLE Transactions (
   FOREIGN KEY (from_id) REFERENCES Branch(branch_id) ON DELETE SET NULL,
   FOREIGN KEY (to_id) REFERENCES Branch(branch_id) ON DELETE SET NULL
 );
+
+CREATE TABLE Token (
+  token_id VARCHAR(255) UNIQUE,
+  for_id VARCHAR(255) PRIMARY KEY,
+  branch BOOLEAN
+);
+
+INSERT INTO Branch VALUES ('the-main-branch', '5f4dcc3b5aa765d61d8327deb882cf99', 'The Main Branch', 10000);
