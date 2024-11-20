@@ -3,11 +3,13 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import md5 from "md5";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [branchId, setBranchId] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     setLoading(true);
     e.preventDefault();
@@ -22,7 +24,7 @@ export default function Home() {
           const { token, data: branch } = res;
           localStorage.setItem("token", token);
           localStorage.setItem("branch", JSON.stringify(branch));
-          alert("Logged in successfully, token = " + token);
+          router.push(`/branch/${branch.branch_id}/${branch.first_name}`);
         }
       })
       .catch((err) => {
