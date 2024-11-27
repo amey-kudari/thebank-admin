@@ -33,7 +33,6 @@ export default function Home() {
       .finally(() => {
         setLoading(false);
       });
-    console.log({ branch_id, password_hash });
   };
   return (
     <div className="flex flex-col h-[100vh] bg-slate-100 justify-center items-center">

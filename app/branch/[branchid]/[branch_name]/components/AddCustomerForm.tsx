@@ -13,7 +13,13 @@ type User = {
   branch_id: string;
 };
 
-export const AddCustomerForm = ({branch_id} : { branch_id : string}) => {
+export const AddCustomerForm = ({
+  branch_id,
+  loadUsers,
+}: {
+  branch_id: string;
+  loadUsers: () => void;
+}) => {
   const [user, setUser] = useState<User>({
     first_name: "",
     middle_name: "",
@@ -27,21 +33,25 @@ export const AddCustomerForm = ({branch_id} : { branch_id : string}) => {
 
   const onAddCustomer = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    fetch('/api/adduser', { method: 'POST', body: JSON.stringify(user) }).then(res => res.json()).then((res : {id : string}) => {
-      alert("User Created Successfully, user_id : " + res.id);
-      setUser({
-        first_name: "",
-        middle_name: "",
-        last_name: "",
-        loc: "",
-        pinCode: "",
-        st: "",
-        password: "",
-        branch_id,
+    fetch("/api/adduser", { method: "POST", body: JSON.stringify(user) })
+      .then((res) => res.json())
+      .then((res: { id: string }) => {
+        loadUsers();
+        alert("User Created Successfully, user_id : " + res.id);
+        setUser({
+          first_name: "",
+          middle_name: "",
+          last_name: "",
+          loc: "",
+          pinCode: "",
+          st: "",
+          password: "",
+          branch_id,
+        });
+      })
+      .catch((err) => {
+        alert("Error adding user, " + err.message);
       });
-    }).catch(err => {
-      alert('Error adding user, ' + err.message);
-    })
   };
 
   return (

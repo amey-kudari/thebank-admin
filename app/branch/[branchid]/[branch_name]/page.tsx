@@ -1,33 +1,9 @@
 "use client";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AddCustomerForm } from "./components/AddCustomerForm";
-
-const USER_KEYS = [
-  "Customer ID",
-  "First Name",
-  "Middle Name",
-  "Last Name",
-  "Pincode",
-  "Credit Limit",
-  "Credit Usage",
-  "Credit Score",
-  "Balance",
-  "Registration Time",
-];
-
-const USER_DB_KEYS = [
-  "customer_id",
-  "first_name",
-  "middle_name",
-  "last_name",
-  "pincode",
-  "credit_limit",
-  "credit_usage",
-  "credit_score",
-  "balance",
-  "registration_time",
-];
+import Link from "next/link";
+import { USER_KEYS, USER_DB_KEYS } from './constants';
 
 const itemRenderer = (item: string, key: string): string => {
   if (key === "Registration Time") {
@@ -58,7 +34,7 @@ export default function Page() {
     return keyobj;
   });
 
-  useEffect(() => {
+  const loadUsers = useCallback(() => {
     setLoading(true);
     fetch(`/api/users?branchid=${branchid}&offset=${offset}`)
       .then((res) => res.json())
@@ -87,7 +63,9 @@ export default function Page() {
         setLoading(false);
       });
     setLoading(false);
-  }, [offset, branchid]);
+  }, [branchid, offset]);
+
+  useEffect(loadUsers, [loadUsers]);
 
   return (
     <div className="flex flex-col min-h-[100vh] bg-slate-100 justify-center items-center py-10">
@@ -113,6 +91,7 @@ export default function Page() {
                   type="checkbox"
                   checked={activeKeys[key]}
                   id={`filter:${key}`}
+                  tabIndex={showFilter ? 0 : -1}
                   onChange={() => {
                     setActiveKeys((prev) => ({ ...prev, [key]: !prev[key] }));
                   }}
@@ -132,6 +111,7 @@ export default function Page() {
                     </th>
                   ) : null
                 )}
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -157,6 +137,11 @@ export default function Page() {
                           </td>
                         ) : null
                       )}
+                      <td className="border px-2 py-1">
+                        <Link href={`/branch/${branchid}/${branchName}/${(user as unknown as { [a: string]: string })[USER_KEYS[0]]}`}>
+                          <button className="border px-2" tabIndex={-1}>Open</button>
+                        </Link>
+                      </td>
                     </tr>
                   ))}
                 </>
@@ -185,7 +170,7 @@ export default function Page() {
         </div>
       </div>
       <div className="p-8 m-4 bg-white flex flex-col w-4/5 sm:w-1/2 justify-center items-center rounded-lg">
-        <AddCustomerForm branch_id={branchid}/>
+        <AddCustomerForm branch_id={branchid} loadUsers={loadUsers}/>
       </div>
 
     </div>
