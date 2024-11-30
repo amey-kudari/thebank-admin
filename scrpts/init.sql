@@ -21,8 +21,6 @@ BEGIN
 END $$;
 
 CREATE TYPE us_state AS ENUM('AZ', 'CA', 'WA', 'NY', 'TX', 'IL');
-CREATE TYPE transaction_cat AS ENUM('USER_USER', 'DEPOSIT', 'WITHDRAWAL', 'CREDIT_REPAYMENT', 'FD_EXPIRY', 'FD_BREAK');
-CREATE TYPE transaction_stat AS ENUM('INITIATED', 'FAILED', 'SENT', 'COMPLETE');
 
 CREATE TABLE Branch (
   branch_id VARCHAR(255) PRIMARY KEY,
@@ -49,19 +47,20 @@ CREATE TABLE Customers (
   FOREIGN KEY (branch_id) REFERENCES Branch(branch_id)
 );
 
+CREATE TYPE transaction_cat AS ENUM('USER_USER', 'DEPOSIT', 'WITHDRAWAL', 'CREDIT_REPAYMENT', 'FD_EXPIRY', 'FD_BREAK');
+CREATE TYPE transaction_stat AS ENUM('INITIATED', 'WITHDRAW_INIT', 'WITHDRAW', 'DEPOSIT_INIT', 'COMPLETE', 'FAILED');
+
 CREATE TABLE Transactions (
   transaction_id VARCHAR(255) PRIMARY KEY,
   from_id VARCHAR(255),
   to_id VARCHAR(255),
+  amount INT,
   cat transaction_cat,
-  amount DECIMAL(15, 2),
-  timestamp_init TIMESTAMP,
   stat transaction_stat,
-  timestamp_complete TIMESTAMP,
-  FOREIGN KEY (from_id) REFERENCES Customers(customer_id) ON DELETE SET NULL,
-  FOREIGN KEY (to_id) REFERENCES Customers(customer_id) ON DELETE SET NULL,
-  FOREIGN KEY (from_id) REFERENCES Branch(branch_id) ON DELETE SET NULL,
-  FOREIGN KEY (to_id) REFERENCES Branch(branch_id) ON DELETE SET NULL
+  last_update TIMESTAMP,
+  comments VARCHAR(255),
+  FOREIGN KEY (from_id) REFERENCES Customers(customer_id),
+  FOREIGN KEY (to_id) REFERENCES Customers(customer_id)
 );
 
 CREATE TABLE Token (
@@ -82,3 +81,16 @@ INSERT INTO Customers (customer_id, password_hash, first_name, middle_name, last
 ('CUST008', '5f4dcc3b5aa765d61d8327deb882cf99', 'Chris', 'F.', 'Martinez', '741 Spruce Avenue, Miami', 33101, 'CA', 16000.00, 7000.00, 720, '2023-01-10 08:00:00', 'the-main-branch', 4500.00),
 ('CUST009', '5f4dcc3b5aa765d61d8327deb882cf99', 'Laura', NULL, 'Taylor', '963 Fir Court, Nashville', 37201, 'AZ', 13000.00, 1200.00, 760, '2021-04-22 13:45:00', 'the-main-branch', 5200.30),
 ('CUST010', '5f4dcc3b5aa765d61d8327deb882cf99', 'Michael', 'G.', 'Anderson', '159 Palm Street, Phoenix', 85001, 'AZ', 17000.00, 2000.00, 670, '2022-10-18 18:30:00', 'the-main-branch', 3700.00);
+
+INSERT INTO Transactions (transaction_id, from_id, to_id, amount, cat, stat, last_update, comments)
+VALUES
+-- Transaction 1: Complete USER_USER transaction
+('TXN001', 'CUST001', 'CUST002', 1500, 'USER_USER', 'COMPLETE', '2024-11-28 10:15:00', 'Payment for services'),
+-- Transaction 2: Complete USER_USER transaction
+('TXN002', 'CUST003', 'CUST004', 2500, 'USER_USER', 'COMPLETE', '2024-11-28 11:30:00', 'Gift transfer'),
+-- Transaction 3: Complete USER_USER transaction
+('TXN003', 'CUST005', 'CUST006', 1000, 'USER_USER', 'COMPLETE', '2024-11-28 12:45:00', 'Shared expenses reimbursement'),
+-- Transaction 4: Complete USER_USER transaction
+('TXN004', 'CUST007', 'CUST008', 500, 'USER_USER', 'COMPLETE', '2024-11-28 13:00:00', 'Loan repayment'),
+-- Transaction 5: Failed USER_USER transaction
+('TXN005', 'CUST009', 'CUST010', 2000, 'USER_USER', 'FAILED', '2024-11-28 14:20:00', 'Insufficient balance');

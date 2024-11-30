@@ -4,6 +4,38 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import { USER_KEYS, USER_DB_KEYS } from "../constants";
 import { ArrowLeftRight } from "lucide-react";
 
+type Transaction = {
+  from_id: string;
+  to_id: string;
+  amount: number;
+  comments: string;
+  stat: string;
+  transaction_id: string;
+  last_update: string;
+};
+
+function getTimeDifference(date1: string) {
+  // Convert both dates to timestamps
+  const diffInMs = Math.abs(+new Date(date1) - +new Date()); // Difference in milliseconds
+
+  // Convert milliseconds to seconds, minutes, hours, and days
+  const diffInSeconds = Math.floor(diffInMs / 1000);
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  // Determine the appropriate unit for the difference
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds} second${diffInSeconds === 1 ? "" : "s"}`;
+  } else if (diffInMinutes < 60) {
+    return `${diffInMinutes} minute${diffInMinutes === 1 ? "" : "s"}`;
+  } else if (diffInHours < 24) {
+    return `${diffInHours} hour${diffInHours === 1 ? "" : "s"}`;
+  } else {
+    return `${diffInDays} day${diffInDays === 1 ? "" : "s"}`;
+  }
+}
+
 export default function Page() {
   const {
     branchid,
@@ -19,6 +51,21 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState<number>();
   const [state, setState] = useState<"Deposit" | "Withdraw">("Deposit");
+  const [tloading, setTloading] = useState(false);
+  const [userTransactions, setUserTransactions] = useState<Transaction[]>([]);
+
+  const loadUserTransactions = useCallback(() => {
+    setTloading(true);
+    fetch(`/api/transactions?from_id=${userid}`)
+      .then((res) => res.json())
+      .then((res) => {
+        setUserTransactions(res);
+      })
+      .catch((err) => {
+        alert("Error Loading transactions " + err.message);
+      })
+      .finally(() => setTloading(false));
+  }, [userid]);
 
   // SELECT * FROM Customers WHERE customer_id='i3l-iij'
   const getUser = useCallback(() => {
@@ -35,16 +82,19 @@ export default function Page() {
   const updateAmount = (e: FormEvent) => {
     e.preventDefault();
     if (userid && amount && amount > 0) {
-      fetch(`/api/${state.toLowerCase()}?userid=${userid}&amount=${amount}`, { method: 'POST' })
+      fetch(`/api/${state.toLowerCase()}?userid=${userid}&amount=${amount}`, {
+        method: "POST",
+      })
         .then((res) => res.json())
         .then((res) => {
           getUser();
-          if(res.error){
+          if (res.error) {
             alert(`Error: ${res.message}`);
           } else {
             alert(`${state} registered successfully`);
           }
-        }).catch((err) => {
+        })
+        .catch((err) => {
           alert("Error " + err.message);
         });
     } else {
@@ -52,7 +102,7 @@ export default function Page() {
     }
   };
 
-
+  useEffect(loadUserTransactions, [loadUserTransactions]);
   useEffect(getUser, [getUser]);
 
   return (
@@ -82,6 +132,59 @@ export default function Page() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+              <div className="p-8 m-4 bg-white flex flex-col w-4/5 sm:w-1/2 justify-center items-center rounded-lg">
+                <h4 className="text-xl mb-4">Recent Transactions</h4>
+                {userTransactions.length ? (
+                  <div className="overflow-x-auto w-full">
+                    <table className="table-layout: auto; table-fixed text-center border w-full">
+                      <thead>
+                        <tr className="border">
+                          <th className="w-32 whitespace-nowrap">
+                            Reciever ID
+                          </th>
+                          <th className="w-32 whitespace-nowrap">Amount</th>
+                          <th className="w-32 whitespace-nowrap">Status</th>
+                          <th className="w-32 whitespace-nowrap">Date</th>
+                          <th className="w-64 whitespace-nowrap">Comments</th>
+                        </tr>
+                      </thead>
+                      <tbody className="max-h-64 overflow-y-auto">
+                        {userTransactions.map((transaction) => (
+                          <tr
+                            className="border"
+                            key={transaction.transaction_id}
+                          >
+                            <td className="w-32 whitespace-nowrap">
+                              {transaction.to_id}
+                            </td>
+                            <td className="w-32 whitespace-nowrap">
+                              {transaction.amount}
+                            </td>
+                            <td className="w-32 whitespace-nowrap">
+                              {transaction.stat}
+                            </td>
+                            <td className="w-32 whitespace-nowrap">
+                              {getTimeDifference(transaction.last_update)}
+                            </td>
+                            <td className="w-64 whitespace-nowrap">
+                              {transaction.comments.slice(0, 25)}
+                              {transaction.comments.length > 25 ? "..." : ""}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <>
+                    {tloading ? (
+                      <p>Loading...</p>
+                    ) : (
+                      <p>No transactions to show</p>
+                    )}
+                  </>
+                )}
               </div>
               <div className="p-8 m-4 bg-white flex flex-col w-4/5 sm:w-1/2 justify-center items-center rounded-lg">
                 <form onSubmit={updateAmount}>
