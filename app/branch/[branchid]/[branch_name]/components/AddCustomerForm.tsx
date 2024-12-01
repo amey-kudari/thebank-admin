@@ -33,7 +33,14 @@ export const AddCustomerForm = ({
 
   const onAddCustomer = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    fetch("/api/adduser", { method: "POST", body: JSON.stringify(user) })
+    fetch("/api/adduser", {
+      method: "POST",
+      body: JSON.stringify(user),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token") ?? ""}`,
+      },
+    })
       .then((res) => res.json())
       .then((res: { id: string }) => {
         loadUsers();

@@ -23,3 +23,5 @@ export const USER_DB_KEYS = [
   "balance",
   "registration_time",
 ];
+
+export const DIV_CLASSNAME = 'p-8 m-4 bg-white flex flex-col w-4/5 sm:w-1/2 justify-center items-center rounded-lg';
