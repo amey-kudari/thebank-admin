@@ -1,40 +1,10 @@
 "use client";
 import { useParams } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { USER_KEYS, USER_DB_KEYS } from "../constants";
+import { USER_KEYS, USER_DB_KEYS, DIV_CLASSNAME } from "../constants";
 import { ArrowLeftRight } from "lucide-react";
-
-type Transaction = {
-  from_id: string;
-  to_id: string;
-  amount: number;
-  comments: string;
-  stat: string;
-  transaction_id: string;
-  last_update: string;
-};
-
-function getTimeDifference(date1: string) {
-  // Convert both dates to timestamps
-  const diffInMs = Math.abs(+new Date(date1) - +new Date()); // Difference in milliseconds
-
-  // Convert milliseconds to seconds, minutes, hours, and days
-  const diffInSeconds = Math.floor(diffInMs / 1000);
-  const diffInMinutes = Math.floor(diffInSeconds / 60);
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  const diffInDays = Math.floor(diffInHours / 24);
-
-  // Determine the appropriate unit for the difference
-  if (diffInSeconds < 60) {
-    return `${diffInSeconds} second${diffInSeconds === 1 ? "" : "s"}`;
-  } else if (diffInMinutes < 60) {
-    return `${diffInMinutes} minute${diffInMinutes === 1 ? "" : "s"}`;
-  } else if (diffInHours < 24) {
-    return `${diffInHours} hour${diffInHours === 1 ? "" : "s"}`;
-  } else {
-    return `${diffInDays} day${diffInDays === 1 ? "" : "s"}`;
-  }
-}
+import type { Transaction } from "./types";
+import { UserTransactions } from "./components/UserTransactions";
 
 export default function Page() {
   const {
@@ -56,7 +26,13 @@ export default function Page() {
 
   const loadUserTransactions = useCallback(() => {
     setTloading(true);
-    fetch(`/api/transactions?from_id=${userid}`)
+    fetch(`/api/transactions?from_id=${userid}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token") ?? ""}`,
+      },
+    })
       .then((res) => res.json())
       .then((res) => {
         setUserTransactions(res);
@@ -67,10 +43,15 @@ export default function Page() {
       .finally(() => setTloading(false));
   }, [userid]);
 
-  // SELECT * FROM Customers WHERE customer_id='i3l-iij'
   const getUser = useCallback(() => {
-    setLoading(false);
-    fetch(`/api/user?userid=${userid}`)
+    setLoading(true);
+    fetch(`/api/user?userid=${userid}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token") ?? ""}`,
+      },
+    })
       .then((res) => res.json())
       .then((res) => setUser(res))
       .catch((err) => {
@@ -84,6 +65,10 @@ export default function Page() {
     if (userid && amount && amount > 0) {
       fetch(`/api/${state.toLowerCase()}?userid=${userid}&amount=${amount}`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token") ?? ""}`,
+        },
       })
         .then((res) => res.json())
         .then((res) => {
@@ -105,6 +90,8 @@ export default function Page() {
   useEffect(loadUserTransactions, [loadUserTransactions]);
   useEffect(getUser, [getUser]);
 
+  const [view, setView] = useState<"VC" | "RT" | "DW">("VC");
+
   return (
     <div className="flex flex-col min-h-[100vh] bg-slate-100 justify-center items-center py-10">
       {loading ? (
@@ -121,103 +108,92 @@ export default function Page() {
                 Of branch {branchName.replaceAll("%20", " ")}{" "}
                 <small>{branchid}</small>
               </h3>
-              <div className="p-8 m-4 bg-white flex flex-col w-4/5 sm:w-1/2 justify-center items-center rounded-lg">
-                <table>
-                  <tbody>
-                    {USER_DB_KEYS.map((key, idx) => (
-                      <tr key={key} className="border-b">
-                        <td className="px-3">{USER_KEYS[idx]}</td>
-                        <td>{user[key]}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="p-8 m-4 bg-white flex flex-col w-4/5 sm:w-1/2 justify-center items-center rounded-lg">
-                <h4 className="text-xl mb-4">Recent Transactions</h4>
-                {userTransactions.length ? (
-                  <div className="overflow-x-auto w-full">
-                    <table className="table-layout: auto; table-fixed text-center border w-full">
-                      <thead>
-                        <tr className="border">
-                          <th className="w-32 whitespace-nowrap">
-                            Reciever ID
-                          </th>
-                          <th className="w-32 whitespace-nowrap">Amount</th>
-                          <th className="w-32 whitespace-nowrap">Status</th>
-                          <th className="w-32 whitespace-nowrap">Date</th>
-                          <th className="w-64 whitespace-nowrap">Comments</th>
-                        </tr>
-                      </thead>
-                      <tbody className="max-h-64 overflow-y-auto">
-                        {userTransactions.map((transaction) => (
-                          <tr
-                            className="border"
-                            key={transaction.transaction_id}
-                          >
-                            <td className="w-32 whitespace-nowrap">
-                              {transaction.to_id}
-                            </td>
-                            <td className="w-32 whitespace-nowrap">
-                              {transaction.amount}
-                            </td>
-                            <td className="w-32 whitespace-nowrap">
-                              {transaction.stat}
-                            </td>
-                            <td className="w-32 whitespace-nowrap">
-                              {getTimeDifference(transaction.last_update)}
-                            </td>
-                            <td className="w-64 whitespace-nowrap">
-                              {transaction.comments.slice(0, 25)}
-                              {transaction.comments.length > 25 ? "..." : ""}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <>
-                    {tloading ? (
-                      <p>Loading...</p>
-                    ) : (
-                      <p>No transactions to show</p>
-                    )}
-                  </>
-                )}
-              </div>
-              <div className="p-8 m-4 bg-white flex flex-col w-4/5 sm:w-1/2 justify-center items-center rounded-lg">
-                <form onSubmit={updateAmount}>
-                  <div className="flex items-center">
-                    <button
-                      type="button"
-                      className="mr-2"
-                      onClick={() =>
-                        setState((prev) =>
-                          prev === "Deposit" ? "Withdraw" : "Deposit"
-                        )
-                      }
-                    >
-                      <ArrowLeftRight />
-                    </button>
-                    <h4 className="text-2xl mb-2">{state} Money</h4>
-                  </div>
-                  <input
-                    value={amount || ""}
-                    onChange={(e) => setAmount(Number(e.target.value))}
-                    id="add:depamount"
-                    className="px-2 py-1 border border-slate-200"
-                    placeholder="Enter Amount"
-                    required
-                  />
+              <div className={`${DIV_CLASSNAME}`}>
+                <div className="flex gap-4 flex-col sm:flex-row">
                   <button
-                    type="submit"
-                    className="px-4 py-2 w-1/2 mt-2 outline-none border border-slate-200 rounded-md hover:bg-blue-500 hover:text-white"
+                    className={`px-4 py-2 border hover:bg-slate-200 rounded-md ${
+                      view === "VC" ? "bg-slate-300" : ""
+                    }`}
+                    onClick={() => setView("VC")}
                   >
-                    {state}
+                    Customer Details
                   </button>
-                </form>
+                  <button
+                    className={`px-4 py-2 border hover:bg-slate-200 rounded-md ${
+                      view === "RT" ? "bg-slate-300" : ""
+                    }`}
+                    onClick={() => setView("RT")}
+                  >
+                    Recent Transactions
+                  </button>
+                  <button
+                    className={`px-4 py-2 border hover:bg-slate-200 rounded-md ${
+                      view === "DW" ? "bg-slate-300" : ""
+                    }`}
+                    onClick={() => setView("DW")}
+                  >
+                    Deposit / Withdraw
+                  </button>
+                </div>
               </div>
+              {view === "VC" ? (
+                <div className="p-8 m-4 bg-white flex flex-col w-4/5 sm:w-1/2 justify-center items-center rounded-lg">
+                  <table>
+                    <tbody>
+                      {USER_DB_KEYS.map((key, idx) => (
+                        <tr key={key} className="border-b">
+                          <td className="px-3">{USER_KEYS[idx]}</td>
+                          <td>{user[key]}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : null}
+              {view === "RT" ? (
+                <UserTransactions
+                  userTransactions={userTransactions}
+                  tloading={tloading}
+                />
+              ) : null}
+              {view === "DW" ? (
+                <div className="p-8 m-4 bg-white flex flex-col w-4/5 sm:w-1/2 justify-center items-center rounded-lg">
+                  <form onSubmit={updateAmount}>
+                    <div className="flex items-center">
+                      <button
+                        type="button"
+                        className="mr-2"
+                        onClick={() =>
+                          setState((prev) =>
+                            prev === "Deposit" ? "Withdraw" : "Deposit"
+                          )
+                        }
+                        title={
+                          state === "Deposit"
+                            ? "Switch to withdraw"
+                            : "Switch to deposit"
+                        }
+                      >
+                        <ArrowLeftRight />
+                      </button>
+                      <h4 className="text-2xl mb-2">{state} Money</h4>
+                    </div>
+                    <input
+                      value={amount || ""}
+                      onChange={(e) => setAmount(Number(e.target.value))}
+                      className="px-2 py-1 border border-slate-200"
+                      placeholder="Enter Amount"
+                      required
+                    />
+                    <button
+                      type="submit"
+                      className="px-4 py-2 w-1/2 mt-2 border border-slate-200 rounded-md hover:bg-blue-500 hover:text-white"
+                    >
+                      {state}
+                    </button>
+                  </form>
+                </div>
+              ) : null}
             </>
           ) : (
             <h1>Error Loading user</h1>

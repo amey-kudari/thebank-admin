@@ -9,7 +9,19 @@ export async function POST(req: Request) {
   const { searchParams } = new URL(req.url);
   const userid = searchParams.get('userid');
   const amount = Number(searchParams.get('amount'));
+
   const sql = neon(process.env.DATABASE_URL ?? '');
+
+  const token = req.headers.get('Authorization')?.replace('Bearer ', '');
+  if(!token){
+    return NextResponse.json({error : true, message: 'invalid params'}, {status : 400});
+  }
+
+  const tokenValidation = await sql`SELECT * FROM Token WHERE token_id = ${token};`;
+  if (tokenValidation.length === 0) {
+    return NextResponse.json({ error: true, message: 'Invalid token or branch mismatch' }, { status: 403 });
+  }
+
   const user = (await sql(`SELECT * FROM Customers WHERE customer_id='${userid}'`))?.[0] as unknown as User;
   if(!amount || !user || amount < 0){
     return NextResponse.json({error: true, message: 'Invalid request'}, {status: 400});
