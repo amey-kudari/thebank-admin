@@ -12,7 +12,7 @@ export async function GET(req: Request) {
     return NextResponse.json({error : true, message: 'invalid params'}, {status : 400});
   }
 
-  const tokenValidation = await sql`SELECT * FROM Token WHERE token_id = ${token};`;
+  const tokenValidation = await sql`SELECT * FROM Token WHERE token_id = ${token} AND branch = true;`;
   if (tokenValidation.length === 0) {
     return NextResponse.json({ error: true, message: 'Invalid token or branch mismatch' }, { status: 403 });
   }
