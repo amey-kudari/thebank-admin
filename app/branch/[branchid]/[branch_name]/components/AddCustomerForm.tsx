@@ -15,6 +15,8 @@ type User = {
   cpassword?: string;
 };
 
+const STATES = ['AZ', 'CA', 'WA', 'NY', 'TX', 'IL'];
+
 export const AddCustomerForm = ({
   branch_id,
   loadUsers,
@@ -37,6 +39,10 @@ export const AddCustomerForm = ({
 
   const onAddCustomer = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if(STATES.indexOf(user.st) < 0){
+      alert("Invalid state");
+      return;
+    }
     fetch("/api/adduser", {
       method: "POST",
       body: JSON.stringify(user),
@@ -127,6 +133,8 @@ export const AddCustomerForm = ({
           required
         />
         <label htmlFor="add:st">State*</label>
+        <div>
+
         <input
           value={user.st}
           onChange={(e) => setUser((prev) => ({ ...prev, st: e.target.value }))}
@@ -134,7 +142,9 @@ export const AddCustomerForm = ({
           className="px-2 py-1 border border-slate-200"
           placeholder="Enter State"
           required
-        />
+          />
+          {(user.st && STATES.indexOf(user.st) < 0) ? <p className="text-red-500 text-sm">Select one of {STATES.join(', ')}</p> : null}
+          </div>
         <label htmlFor="add:pass">Password*</label>
         <input
           value={user.password}
