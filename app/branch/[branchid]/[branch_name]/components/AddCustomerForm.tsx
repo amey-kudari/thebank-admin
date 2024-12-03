@@ -11,6 +11,7 @@ type User = {
   st: string;
   password: string;
   branch_id: string;
+  cpassword?: string;
 };
 
 export const AddCustomerForm = ({
@@ -29,6 +30,7 @@ export const AddCustomerForm = ({
     st: "",
     password: "",
     branch_id,
+    cpassword: "",
   });
 
   const onAddCustomer = (e: FormEvent<HTMLFormElement>) => {
@@ -96,48 +98,66 @@ export const AddCustomerForm = ({
           className="px-2 py-1 border border-slate-200"
           placeholder="Enter Last Name"
         />
-        <label htmlFor="add:name">Address</label>
+        <label htmlFor="add:addr">Address</label>
         <input
           value={user.loc}
           onChange={(e) =>
             setUser((prev) => ({ ...prev, loc: e.target.value }))
           }
-          id="add:name"
+          id="add:addr"
           className="px-2 py-1 border border-slate-200"
           placeholder="Enter Street Address"
         />
-        <label htmlFor="add:name">Pin Code*</label>
+        <label htmlFor="add:pnc">Pin Code*</label>
         <input
           value={user.pinCode}
           onChange={(e) =>
             setUser((prev) => ({ ...prev, pinCode: e.target.value }))
           }
-          id="add:name"
+          id="add:pnc"
           type="number"
           className="px-2 py-1 border border-slate-200"
           placeholder="Enter Pin Code"
           required
         />
-        <label htmlFor="add:name">State*</label>
+        <label htmlFor="add:st">State*</label>
         <input
           value={user.st}
           onChange={(e) => setUser((prev) => ({ ...prev, st: e.target.value }))}
-          id="add:name"
+          id="add:st"
           className="px-2 py-1 border border-slate-200"
           placeholder="Enter State"
           required
         />
-        <label htmlFor="add:name">Password*</label>
+        <label htmlFor="add:pass">Password*</label>
         <input
           value={user.password}
           onChange={(e) =>
             setUser((prev) => ({ ...prev, password: e.target.value }))
           }
-          id="add:name"
+          type="password"
+          id="add:pass"
           className="px-2 py-1 border border-slate-200"
           placeholder="Enter Password"
           required
         />
+        <label htmlFor="add:cpass">Confirm Password*</label>
+        <div>
+
+        <input
+          value={user.cpassword}
+          type="password"
+          onChange={(e) =>
+            setUser((prev) => ({ ...prev, cpassword: e.target.value }))
+          }
+          id="add:cpass"
+          className="px-2 py-1 border border-slate-200"
+          placeholder="Enter Password"
+          required
+          />
+          {user.cpassword !== user.password ? <p className="text-red-500 text-sm">Passwords do not match</p> : null}
+          </div>
+        
       </div>
       <div className="flex justify-end mt-2 w-full">
         <button

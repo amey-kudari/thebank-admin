@@ -42,7 +42,7 @@ export default function Home() {
       >
         <h1 className="text-2xl sm:text-4xl">Login to your branch</h1>
         <input
-          className="px-4 py-2 w-1/2 mt-2 outline-none border border-slate-200 rounded-md"
+          className="px-4 py-2 w-1/2 mt-2 border border-slate-200 rounded-md"
           placeholder="Branch ID"
           required
           aria-required
@@ -50,7 +50,7 @@ export default function Home() {
           onChange={(e) => setBranchId(e.target.value)}
         />
         <input
-          className="px-4 py-2 w-1/2 mt-2 outline-none border border-slate-200 rounded-md"
+          className="px-4 py-2 w-1/2 mt-2 border border-slate-200 rounded-md"
           placeholder="password"
           type="password"
           required
@@ -59,7 +59,7 @@ export default function Home() {
           onChange={(e) => setPassword(e.target.value)}
         />
         <button
-          className="px-4 py-2 w-1/2 mt-2 outline-none border border-slate-200 rounded-md hover:bg-blue-500 hover:text-white"
+          className="px-4 py-2 w-1/2 mt-2 border border-slate-200 rounded-md hover:bg-blue-500 hover:text-white"
           type="submit"
           disabled={loading}
         >
