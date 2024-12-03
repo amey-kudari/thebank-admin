@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 type User = {
@@ -21,6 +22,7 @@ export const AddCustomerForm = ({
   branch_id: string;
   loadUsers: () => void;
 }) => {
+  const router = useRouter();
   const [user, setUser] = useState<User>({
     first_name: "",
     middle_name: "",
@@ -44,7 +46,11 @@ export const AddCustomerForm = ({
       },
     })
       .then((res) => res.json())
-      .then((res: { id: string }) => {
+      .then((res: { id: string, error?: boolean }) => {
+        if(res.error){
+          alert("You have been logged out");
+          router.push("/");
+        }
         loadUsers();
         alert("User Created Successfully, user_id : " + res.id);
         setUser({
