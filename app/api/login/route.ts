@@ -63,7 +63,7 @@ export async function GET(req: Request) {
 
   const token = create_token();
   try{
-    // await sql("DELETE FROM Token WHERE for_id=$1", [branch_id]);
+    await sql("DELETE FROM Token WHERE for_id=$1", [branch_id]);
     await sql("INSERT INTO Token VALUES ($1, $2, $3)", [token, branch_id, true]);
     return NextResponse.json({
       data : branch,
